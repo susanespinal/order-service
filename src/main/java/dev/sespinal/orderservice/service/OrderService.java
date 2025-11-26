@@ -5,6 +5,7 @@ import dev.sespinal.orderservice.kafka.event.OrderPlacedEvent;
 import dev.sespinal.orderservice.kafka.producer.OrderEventProducer;
 import dev.sespinal.orderservice.dto.OrderRequest;
 import dev.sespinal.orderservice.dto.OrderResponse;
+import dev.sespinal.orderservice.mapper.OrderMapper;
 import dev.sespinal.orderservice.model.entity.Order;
 import dev.sespinal.orderservice.model.entity.OrderStatus;
 import dev.sespinal.orderservice.repository.OrderRepository;
@@ -30,14 +31,9 @@ public class OrderService {
 
   @Transactional
   public OrderResponse create(OrderRequest request) {
-    // 1. Crear y guardar orden
-    Order order = new Order();
-    order.setProductId(request.getProductId());
-    order.setQuantity(request.getQuantity());
-    order.setCustomerName(request.getCustomerName());
-    order.setCustomerEmail(request.getCustomerEmail());
-    order.setTotalAmount(request.getTotalAmount());
 
+    // 1. Mapear y guardar orden
+    Order order = OrderMapper.toEntity(request);
     Order saved = orderRepository.save(order);
 
     // 2. Publicar evento a Kafka
@@ -51,8 +47,8 @@ public class OrderService {
     );
     orderEventProducer.publishOrderPlaced(event);
 
-    // 3. Retornar respuesta
-    return mapToResponse(saved);
+    // 3. Retornar la respuesta
+    return OrderMapper.toResponse(saved);
   }
 
   // Resto de métodos sin cambios...
